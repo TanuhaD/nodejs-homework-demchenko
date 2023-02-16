@@ -2,9 +2,14 @@ const { Contact } = require("../models/contact");
 
 const { HttpError, ctrlWrapper } = require("../helpers");
 
+const removeLowDashOnId = ({ _id, name, email, phone, favorite }) => {
+  return { id: _id, name, email, phone, favorite };
+};
+
 const getAll = async (req, res) => {
-  const result = await Contact.find();
-  res.json(result);
+  const result = await Contact.find({}, "name");
+  const updContactsId = result.map(removeLowDashOnId);
+  res.json(updContactsId);
 };
 
 const getById = async (req, res) => {
@@ -13,12 +18,12 @@ const getById = async (req, res) => {
   if (!result) {
     throw HttpError(404, `Contact with ${id} not found`);
   }
-  res.json(result);
+  res.json(removeLowDashOnId(result));
 };
 
 const add = async (req, res) => {
   const result = await Contact.create(req.body);
-  res.status(201).json(result);
+  res.status(201).json(removeLowDashOnId(result));
 };
 
 const updateById = async (req, res) => {
@@ -27,7 +32,7 @@ const updateById = async (req, res) => {
   if (!result) {
     throw HttpError(404, `Contact with ${id} not found`);
   }
-  res.json(result);
+  res.json(removeLowDashOnId(result));
 };
 
 const updateFavoriteById = async (req, res) => {
@@ -36,7 +41,7 @@ const updateFavoriteById = async (req, res) => {
   if (!result) {
     throw HttpError(404, `Contact with ${id} not found`);
   }
-  res.json(result);
+  res.json(removeLowDashOnId(result));
 };
 
 const deleteById = async (req, res) => {
