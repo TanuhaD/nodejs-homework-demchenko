@@ -2,12 +2,22 @@ const { Contact } = require("../models/contact");
 
 const { HttpError, ctrlWrapper } = require("../helpers");
 
-const removeLowDashOnId = ({ _id, name, email, phone, favorite }) => {
-  return { id: _id, name, email, phone, favorite };
+const removeLowDashOnId = ({ _id, name, email, phone, favorite, owner }) => {
+  return { id: _id, name, email, phone, favorite, owner };
 };
 
 const getAll = async (req, res) => {
-  const result = await Contact.find({}, "name");
+  const userId = req.user._id;
+  const { page = 1, limit = 20, favorite = null } = req.query;
+  const filter = { owner: userId };
+  if (favorite !== null) {
+    filter.favorite = favorite;
+  }
+  const skip = (page - 1) * limit;
+  const result = await Contact.find(filter, "-createdAt -updatedAt", {
+    skip,
+    limit,
+  }).populate("owner", "subscription email");
   const updContactsId = result.map(removeLowDashOnId);
   res.json(updContactsId);
 };
@@ -22,7 +32,8 @@ const getById = async (req, res) => {
 };
 
 const add = async (req, res) => {
-  const result = await Contact.create(req.body);
+  const { _id: owner } = req.user;
+  const result = await Contact.create({ ...req.body, owner });
   res.status(201).json(removeLowDashOnId(result));
 };
 
